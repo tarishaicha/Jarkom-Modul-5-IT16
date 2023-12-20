@@ -467,6 +467,7 @@ service isc-dhcp-relay status
 ## Soal 1
 Agar topologi yang kalian buat dapat mengakses keluar, kalian diminta untuk mengkonfigurasi Aura menggunakan iptables, tetapi tidak ingin menggunakan MASQUERADE
 
+Untuk Nomor 1 berikut adalah scriptnya
 ### Aura
 ```
 iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.128/30 --to-source 192.168.122.2
@@ -495,4 +496,20 @@ iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.136/30 --to-source 
 ```
 iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.144/30 --to-source 192.241.14.3
 iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.148/30 --to-source 192.241.14.3
+```
+
+## Soal 2
+Kalian diminta untuk melakukan drop semua TCP dan UDP kecuali port 8080 pada TCP.
+
+untuk mengerkjakan soal 2 scriptnya adalah
+```
+#!/bin/bash
+# semua node
+
+iptables -F
+iptables -A INPUT -p icmp -j ACCEPT
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+iptables -A INPUT -p tcp -j DROP
+iptables -A INPUT -p udp -j DROP
+
 ```
