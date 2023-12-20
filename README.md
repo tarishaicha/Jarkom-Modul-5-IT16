@@ -465,3 +465,34 @@ service isc-dhcp-relay status
 ```
 
 ## Soal 1
+Agar topologi yang kalian buat dapat mengakses keluar, kalian diminta untuk mengkonfigurasi Aura menggunakan iptables, tetapi tidak ingin menggunakan MASQUERADE
+
+### Aura
+```
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.128/30 --to-source 192.168.122.2
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.132/30 --to-source 192.168.122.2
+```
+
+### Heiter
+```
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.0.0/21 --to-source 192.241.14.130
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.8.0/22 --to-source 192.241.14.130
+```
+
+### Frieren
+```
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.140/30 --to-source 192.241.14.134
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.136/30 --to-source 192.241.14.134
+```
+
+### Himmel
+```
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.140/30 --to-source 192.241.14.134
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.136/30 --to-source 192.241.14.134
+```
+
+#### Fern
+```
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.144/30 --to-source 192.241.14.3
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.148/30 --to-source 192.241.14.3
+```
