@@ -513,3 +513,50 @@ iptables -A INPUT -p tcp -j DROP
 iptables -A INPUT -p udp -j DROP
 
 ```
+
+## Soal 3
+Kepala Suku North Area meminta kalian untuk membatasi DHCP dan DNS Server hanya dapat dilakukan ping oleh maksimal 3 device secara bersamaan, selebihnya akan di drop.
+
+Script untuk soal 3 
+```
+#!/bin/bash
+
+# DHCP (Revolte) dan DNS Server (Richter)
+
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+iptables -A INPUT -p icmp -m connlimit --connlimit-above 3 --connlimit-mask 0 -j DROP
+
+```
+
+## Soal 4
+Lakukan pembatasan sehingga koneksi SSH pada Web Server hanya dapat dilakukan oleh masyarakat yang berada pada GlobeForest.
+
+Sript untuk soal 4
+```
+#!/bin/bash
+
+# Web Server (Stark & Sein) -> no 4
+iptables -A INPUT -p tcp --dport 22 -s 10.69.8.0/22 -j ACCEPT
+# iptables -A INPUT -p tcp --dport 22 -j DROP
+
+# no 5
+iptables -A INPUT -p tcp --dport 22 -s 10.69.8.0/22 -m time --timestart 08:00 --timestop 16:00 --weekdays Mon,Tue,Wed,Thu,Fri -j ACCEPT
+
+# no 6
+iptables -A INPUT -p tcp --dport 22 -s 10.69.8.0/22 -m time --timestart 12:00 --timestop 13:00 --weekdays Mon,Tue,Wed,Thu -j DROP
+iptables -A INPUT -p tcp --dport 22 -s 10.69.8.0/22 -m time --timestart 11:00 --timestop 13:00 --weekdays Fri -j DROP
+
+iptables -A INPUT -p tcp --dport 22 -j DROP
+
+iptables -N scan_port
+
+iptables -A INPUT -m recent --name scan_port --update --seconds 600 --hitcount 20 -j DROP
+
+iptables -A FORWARD -m recent --name scan_port --update --seconds 600 --hitcount 20 -j DROP
+
+iptables -A INPUT -m recent --name scan_port --set -j ACCEPT
+
+iptables -A FORWARD -m recent --name scan_port --set -j ACCEPT
+
+```
