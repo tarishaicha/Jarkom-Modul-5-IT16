@@ -299,3 +299,169 @@ route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.241.14.1
 # A3
 iptables -t nat -A POSTROUTING -o eth0 -j SNAT -s 192.241.14.0/25 --to-source 192.168.122.2
 ```
+
+### Konfigurasi DNS
+untuk konfig DNS kami menggunakan Script ini
+```
+
+echo "nameserver 192.168.122.1" >/etc/resolv.conf
+
+apt update
+apt install bind9 dnsutils -y
+
+# Backup existing file
+cp /etc/bind/named.conf.options /etc/bind/named.conf.options/bak
+
+# Configuration data
+echo 'options {
+    listen-on-v6 { none; };
+    directory "/var/cache/bind";
+
+    # Forwarders
+    forwarders {
+        192.168.122.1;
+    };
+
+    # If there is no answer from the forwarders, dont attempt to resolve recursively
+    forward only;
+
+    dnssec-validation no;
+
+    auth-nxdomain no;    # conform to RFC1035
+    allow-query { any; };
+};' >/etc/bind/named.conf.options
+
+service bind9 restart
+service bind9 status
+```
+
+### Setup DHCP Server dan Relay
+#### DHCP Server
+```
+
+echo "nameserver 192.168.122.1" >/etc/resolv.conf
+
+apt update
+apt install isc-dhcp-server rsyslog -y
+
+Konfigurasi yang akan dimasukkan ke dalam file
+echo "# Defaults for isc-dhcp-server (sourced by /etc/init.d/isc-dhcp-server)
+# Path to dhcpd's config file (default: /etc/dhcp/dhcpd.conf).
+#DHCPDv4_CONF=/etc/dhcp/dhcpd.conf
+#DHCPDv6_CONF=/etc/dhcp/dhcpd6.conf
+# Path to dhcpd's PID file (default: /var/run/dhcpd.pid).
+#DHCPDv4_PID=/var/run/dhcpd.pid
+#DHCPDv6_PID=/var/run/dhcpd6.pid
+# Additional options to start dhcpd with.
+#       Don't use options -cf or -pf here; use DHCPD_CONF/ DHCPD_PID instead
+#OPTIONS=\"\"
+# On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
+#       Separate multiple interfaces with spaces, e.g. \"eth0 eth1\".
+INTERFACESv4=\"eth0\"
+INTERFACESv6=\"\"" >/etc/default/isc-dhcp-server
+
+echo "# Subnet A10 Grobe Forest
+subnet 192.241.8.0 netmask 255.255.252.0 {
+    range 192.241.8.3 192.241.11.254;
+    option routers 192.241.8.1;
+    option broadcast-address 192.241.11.255;
+    option domain-name-servers 192.241.14.146;
+    default-lease-time 720;
+    max-lease-time 5760;
+}
+
+# Subnet A9 Turk Region
+subnet 192.241.0.0 netmask 255.255.248.0 {
+    range 192.241.0.1 192.241.7.254;
+    option routers 192.241.0.1;
+    option broadcast-address 192.241.7.255;
+    option domain-name-servers 192.241.14.146;
+    default-lease-time 720;
+    max-lease-time 5760;
+}
+
+# Subnet A8
+subnet 192.241.14.128 netmask 255.255.255.252 {
+}
+
+# Subnet A7
+subnet 192.241.14.132 netmask 255.255.255.252 {
+}
+
+# Subnet A6
+subnet 192.241.14.136 netmask 255.255.255.252 {
+}
+
+# Subnet A5
+subnet 192.241.14.140 netmask 255.255.255.252 {
+}
+
+# Subnet A4 Laub Hills
+subnet 192.241.12.0 netmask 255.255.254.0 {
+    range 192.241.12.2 192.241.13.254;
+    option routers 192.241.12.1;
+    option broadcast-address 192.241.13.255;
+    option domain-name-servers 192.241.14.146;
+    default-lease-time 720;
+    max-lease-time 5760;
+}
+
+# Subnet A3 Schwer Mountains
+subnet 192.241.14.0 netmask 255.255.255.128 {
+    range 192.241.14.2 192.241.14.126;
+    option routers 192.241.14.1;
+    option broadcast-address 192.241.14.127;
+    option domain-name-servers 192.241.14.146;
+    default-lease-time 720;
+    max-lease-time 5760;
+}
+
+# Subnet A2
+subnet 192.241.14.144 netmask 255.255.255.252 {
+}
+
+# Subnet A1
+subnet 192.241.14.148 netmask 255.255.255.252 {
+}
+" >/etc/dhcp/dhcpd.conf
+
+rm /var/run/dhcpd.pid
+
+service isc-dhcp-server restart
+service rsyslog start
+
+service isc-dhcp-server status
+```
+
+#### DHCP Relay
+```
+apt update
+
+apt-get install isc-dhcp-relay rsyslog -y
+
+echo "# Defaults for isc-dhcp-relay initscript
+# sourced by /etc/init.d/isc-dhcp-relay
+# installed at /etc/default/isc-dhcp-relay by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# What servers should the DHCP relay forward requests to?
+SERVERS=\"192.241.14.150\"
+
+# On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+INTERFACES=\"eth0 eth1 eth2\"
+
+# Additional options that are passed to the DHCP relay daemon?
+OPTIONS=\"\"" >/etc/default/isc-dhcp-relay
+
+service rsyslog start
+
+# sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
+
+service isc-dhcp-relay restart
+service isc-dhcp-relay status
+```
+
+## Soal 1
